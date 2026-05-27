@@ -1,7 +1,7 @@
-import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
 import React from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Image, ImageSource } from 'expo-image';
+import { SymbolView } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExternalLink } from '@/components/external-link';
@@ -9,35 +9,46 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Collapsible } from '@/components/ui/collapsible';
 import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function TabTwoScreen() {
   const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
-  };
   const theme = useTheme();
 
-  const contentPlatformStyle = Platform.select({
-    android: {
-      paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
-    },
-    web: {
-      paddingTop: Spacing.six,
-      paddingBottom: Spacing.four,
-    },
-  });
+  const paddingTop = safeAreaInsets?.top ? Number(safeAreaInsets.top) : 0;
+  const paddingLeft = safeAreaInsets?.left ? Number(safeAreaInsets.left) : 0;
+  const paddingRight = safeAreaInsets?.right ? Number(safeAreaInsets.right) : 0;
+  const safeBottom = safeAreaInsets?.bottom ? Number(safeAreaInsets.bottom) : 0;
+  
+  const tabInset = 49;
+  const spacingThree = 12;
+  const spacingSix = 24;
+  const spacingFour = 16;
+
+  const paddingBottom = safeBottom + tabInset + spacingThree;
+
+  const paddingStyle = Platform.OS === 'web' 
+    ? {
+        paddingTop: spacingSix,
+        paddingBottom: spacingFour,
+      }
+    : {
+        paddingTop,
+        paddingLeft,
+        paddingRight,
+        paddingBottom,
+      };
+
+  const combinedContentContainerStyle = StyleSheet.flatten([
+    styles.contentContainer,
+    paddingStyle,
+  ]);
 
   return (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+      contentContainerStyle={combinedContentContainerStyle}
+    >
       <ThemedView style={styles.container}>
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="subtitle">Explore</ThemedText>
@@ -46,7 +57,7 @@ export default function TabTwoScreen() {
           </ThemedText>
 
           <ExternalLink href="https://docs.expo.dev" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
+            <Pressable style={({ pressed }) => [pressed && styles.pressed]}>
               <ThemedView type="backgroundElement" style={styles.linkButton}>
                 <ThemedText type="link">Expo documentation</ThemedText>
                 <SymbolView
@@ -82,29 +93,17 @@ export default function TabTwoScreen() {
                 project.
               </ThemedText>
               <Image
-                source={require('@/assets/images/tutorial-web.png')}
+                source={require('@/assets/images/tutorial-web.png') as ImageSource}
                 style={styles.imageTutorial}
               />
             </ThemedView>
-          </Collapsible>
-
-          <Collapsible title="Images">
-            <ThemedText type="small">
-              For static images, you can use the <ThemedText type="code">@2x</ThemedText> and{' '}
-              <ThemedText type="code">@3x</ThemedText> suffixes to provide files for different
-              screen densities.
-            </ThemedText>
-            <Image source={require('@/assets/images/react-logo.png')} style={styles.imageReact} />
-            <ExternalLink href="https://reactnative.dev/docs/images">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
           </Collapsible>
 
           <Collapsible title="Light and dark mode components">
             <ThemedText type="small">
               This template has light and dark mode support. The{' '}
               <ThemedText type="code">useColorScheme()</ThemedText> hook lets you inspect what the
-              user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
+              user's current color scheme is, and so you can adjust UI colors accordingly.
             </ThemedText>
             <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
               <ThemedText type="linkPrimary">Learn more</ThemedText>
@@ -120,6 +119,7 @@ export default function TabTwoScreen() {
             </ThemedText>
           </Collapsible>
         </ThemedView>
+
         {Platform.OS === 'web' && <WebBadge />}
       </ThemedView>
     </ScrollView>
@@ -135,14 +135,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   container: {
-    maxWidth: MaxContentWidth,
+    maxWidth: 960, // Fallback para MaxContentWidth antigo
     flexGrow: 1,
   },
   titleContainer: {
-    gap: Spacing.three,
+    gap: 12,
     alignItems: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
+    paddingHorizontal: 16,
+    paddingVertical: 24,
   },
   centerText: {
     textAlign: 'center',
@@ -152,17 +152,17 @@ const styles = StyleSheet.create({
   },
   linkButton: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
     justifyContent: 'center',
-    gap: Spacing.one,
+    gap: 4,
     alignItems: 'center',
   },
   sectionsWrapper: {
-    gap: Spacing.five,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
+    gap: 20,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   collapsibleContent: {
     alignItems: 'center',
@@ -170,12 +170,7 @@ const styles = StyleSheet.create({
   imageTutorial: {
     width: '100%',
     aspectRatio: 296 / 171,
-    borderRadius: Spacing.three,
-    marginTop: Spacing.two,
-  },
-  imageReact: {
-    width: 100,
-    height: 100,
-    alignSelf: 'center',
+    borderRadius: 12,
+    marginTop: 8,
   },
 });
